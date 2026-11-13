@@ -1,0 +1,21 @@
+# Xcode / 构建产物
+build/
+DerivedData/
+*.xcarchive
+*.xcuserstate
+xcuserdata/
+*.xcuserdatad
+
+# XcodeGen 生成的工程文件（用 xcodegen 重新生成）
+ClaudeAccount.xcodeproj/
+
+# SPM
+.swiftpm/
+
+# macOS
+.DS_Store
+
+# 临时文件
+*.log
+tmp/
+.omx/
