@@ -8,7 +8,6 @@ final class CryptoService: ObservableObject, @unchecked Sendable {
     static let shared = CryptoService()
 
     @Published private(set) var isUnlocked = false
-    private let stateLock = NSLock()
 
     private let saltKey = "com.claudeaccount.masterSalt"
     private let verifierKey = "com.claudeaccount.masterVerifier"
@@ -42,7 +41,7 @@ final class CryptoService: ObservableObject, @unchecked Sendable {
             throw CryptoError.noMasterPassword
         }
         let derived = try deriveKey(password: password, salt: salt)
-        guard verifierData(from: derived) == stored else {
+        guard constantTimeEqual(verifierData(from: derived), stored) else {
             throw CryptoError.wrongPassword
         }
         key = derived
@@ -215,6 +214,16 @@ final class CryptoService: ObservableObject, @unchecked Sendable {
         key.withUnsafeBytes { material.append(contentsOf: $0) }
         material.append(Data("ClaudeAccount.verifier".utf8))
         return Data(SHA256.hash(data: material))
+    }
+
+    /// 恒定时间比较，避免时序侧信道泄露校验值匹配程度
+    private func constantTimeEqual(_ lhs: Data, _ rhs: Data) -> Bool {
+        guard lhs.count == rhs.count else { return false }
+        var diff: UInt8 = 0
+        for (x, y) in zip(lhs, rhs) {
+            diff |= x ^ y
+        }
+        return diff == 0
     }
 
     enum CryptoError: Error {
