@@ -51,17 +51,16 @@ extension KeyboardShortcuts.Name {
 struct ContentView: View {
     @ObservedObject private var crypto = CryptoService.shared
     @State private var selection: SidebarItem = .accounts(.all)
+    @State private var selectedAccount: ClaudeAccount?
 
     var body: some View {
         NavigationSplitView {
             SidebarView(selection: $selection)
+                .navigationSplitViewColumnWidth(min: 170, ideal: 200, max: 240)
+        } content: {
+            contentColumn
         } detail: {
-            switch selection {
-            case .accounts(let filter):
-                AccountListView(planFilter: filter)
-            case .stats:
-                StatsView()
-            }
+            detailColumn
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -76,6 +75,41 @@ struct ContentView: View {
             KeyboardShortcuts.onKeyDown(for: .lockApp) {
                 crypto.lock()
             }
+        }
+    }
+
+    @ViewBuilder
+    private var contentColumn: some View {
+        switch selection {
+        case .accounts(let filter):
+            AccountListView(planFilter: filter, selectedAccount: $selectedAccount)
+                .navigationSplitViewColumnWidth(min: 360, ideal: 440, max: 560)
+        case .stats:
+            StatsView()
+                .navigationSplitViewColumnWidth(min: 480, ideal: 680)
+        }
+    }
+
+    @ViewBuilder
+    private var detailColumn: some View {
+        switch selection {
+        case .accounts:
+            if let account = selectedAccount {
+                AccountDetailView(account: account)
+                    .id(account.id)
+                    .navigationSplitViewColumnWidth(min: 300, ideal: 380, max: 480)
+            } else {
+                ContentUnavailableView(
+                    "未选择账号",
+                    systemImage: "person.crop.circle.badge.questionmark",
+                    description: Text("在左侧列表中选择一个账号查看详情")
+                )
+                .navigationSplitViewColumnWidth(min: 300, ideal: 380, max: 480)
+            }
+        case .stats:
+            // 统计页占满宽度，隐藏详情栏
+            Color.clear
+                .navigationSplitViewColumnWidth(min: 0, ideal: 0, max: 0)
         }
     }
 }

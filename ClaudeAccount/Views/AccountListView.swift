@@ -6,6 +6,7 @@ struct AccountListView: View {
     @Query private var accounts: [ClaudeAccount]
 
     let planFilter: AccountPlanFilter
+    @Binding var selectedAccount: ClaudeAccount?
 
     @State private var searchText = ""
     @State private var selected = Set<PersistentIdentifier>()
@@ -16,51 +17,76 @@ struct AccountListView: View {
     @State private var showDeleteConfirm = false
     @AppStorage("hideBannedAccounts") private var hideBanned = false
 
+    private var selectionBinding: Binding<Set<PersistentIdentifier>> {
+        Binding(
+            get: { selected },
+            set: { newValue in
+                selected = newValue
+                selectedAccount = newValue
+                    .compactMap { id in accounts.first { $0.id == id } }
+                    .last
+            }
+        )
+    }
+
     var filtered: [ClaudeAccount] {
         accounts
             .filter(matchesFilter)
             .sorted { ($0.firstSubscriptionDate ?? .distantPast) > ($1.firstSubscriptionDate ?? .distantPast) }
     }
 
-    private func matchesFilter(_ account: ClaudeAccount) -> Bool {
-        if hideBanned && account.isBanned { return false }
-        if !matchesPlanFilter(account) { return false }
-        if !matchesSearch(account) { return false }
-        return true
-    }
-
-    private func matchesPlanFilter(_ account: ClaudeAccount) -> Bool {
-        switch planFilter {
-        case .all:
-            return true
-        case .banned:
-            return account.isBanned
-        case .free, .pro, .max, .ultra:
-            guard let tier = planFilter.planTier else { return false }
-            return !account.isBanned && account.currentPlan == tier
-        }
-    }
-
-    private func matchesSearch(_ account: ClaudeAccount) -> Bool {
-        guard !searchText.isEmpty else { return true }
-        let query = searchText.lowercased()
-        let haystack = [account.email, account.region ?? ""]
-            .joined(separator: " ")
-            .lowercased()
-        return haystack.contains(query)
+    var body: some View {
+        accountTable
+            .searchable(text: $searchText, placement: .toolbar)
+            .overlay(emptyStateOverlay)
+            .contextMenu(
+                forSelectionType: PersistentIdentifier.self,
+                menu: { ids in
+                    Button("编辑") {
+                        openEditor(for: ids)
+                    }
+                    Button("添加订阅记录") {
+                        subscriptionTarget = account(for: ids)
+                    }
+                    if let account = account(for: ids) {
+                        Button(account.isBanned ? "解除封禁" : "封禁", role: account.isBanned ? nil : .destructive) {
+                            toggleBan(account)
+                        }
+                    }
+                    Divider()
+                    Button("删除", role: .destructive) {
+                        pendingDelete = ids
+                        showDeleteConfirm = true
+                    }
+                },
+                primaryAction: { ids in
+                    openEditor(for: ids)
+                }
+            )
+            .toolbar { toolbarContent }
+            .sheet(item: $editing) { account in
+                AccountEditView(account: account)
+            }
+            .sheet(isPresented: $showingNew) {
+                AccountEditView(account: nil)
+            }
+            .sheet(item: $subscriptionTarget) { account in
+                AddSubscriptionView(account: account, onSave: {})
+            }
+            .confirmationDialog(
+                "确定删除选中的 \(pendingDelete.count) 个账号？此操作不可撤销。",
+                isPresented: $showDeleteConfirm
+            ) {
+                Button("删除", role: .destructive) {
+                    deleteAccounts(pendingDelete)
+                }
+                Button("取消", role: .cancel) {}
+            }
     }
 
     private var accountTable: some View {
-        Table(filtered, selection: $selected) {
+        Table(filtered, selection: selectionBinding) {
             TableColumn("邮箱", value: \.email)
-            TableColumn("KYC") { account in
-                Text(account.kycStatus.displayName)
-            }
-            .width(max: 60)
-            TableColumn("地区") { account in
-                Text(account.region ?? "—")
-            }
-            .width(max: 100)
             TableColumn("状态") { account in
                 if account.isBanned {
                     Label("已封禁", systemImage: "xmark.octagon.fill")
@@ -84,69 +110,6 @@ struct AccountListView: View {
                     Text("—")
                 }
             }
-            TableColumn("购买日期") { account in
-                if let date = account.firstSubscriptionDate {
-                    Text(formatDate(date))
-                } else {
-                    Text("—")
-                }
-            }
-            TableColumn("封禁日期") { account in
-                if let bannedDate = account.bannedDate {
-                    Text(formatDate(bannedDate))
-                } else {
-                    Text("—")
-                }
-            }
-        }
-    }
-
-    var body: some View {
-        accountTable
-        .searchable(text: $searchText, placement: .toolbar)
-        .overlay(emptyStateOverlay)
-        .contextMenu(
-            forSelectionType: ClaudeAccount.ID.self,
-            menu: { ids in
-                Button("编辑") {
-                    openEditor(for: ids)
-                }
-                Button("添加订阅记录") {
-                    subscriptionTarget = account(for: ids)
-                }
-                if let account = account(for: ids) {
-                    Button(account.isBanned ? "解除封禁" : "封禁", role: account.isBanned ? nil : .destructive) {
-                        toggleBan(account)
-                    }
-                }
-                Divider()
-                Button("删除", role: .destructive) {
-                    pendingDelete = ids
-                    showDeleteConfirm = true
-                }
-            },
-            primaryAction: { ids in
-                openEditor(for: ids)
-            }
-        )
-        .toolbar { toolbarContent }
-        .sheet(item: $editing) { account in
-            AccountEditView(account: account)
-        }
-        .sheet(isPresented: $showingNew) {
-            AccountEditView(account: nil)
-        }
-        .sheet(item: $subscriptionTarget) { account in
-            AddSubscriptionView(account: account, onSave: {})
-        }
-        .confirmationDialog(
-            "确定删除选中的 \(pendingDelete.count) 个账号？此操作不可撤销。",
-            isPresented: $showDeleteConfirm
-        ) {
-            Button("删除", role: .destructive) {
-                deleteAccounts(pendingDelete)
-            }
-            Button("取消", role: .cancel) {}
         }
     }
 
@@ -182,6 +145,34 @@ struct AccountListView: View {
         }
     }
 
+    private func matchesFilter(_ account: ClaudeAccount) -> Bool {
+        if hideBanned && account.isBanned { return false }
+        if !matchesPlanFilter(account) { return false }
+        if !matchesSearch(account) { return false }
+        return true
+    }
+
+    private func matchesPlanFilter(_ account: ClaudeAccount) -> Bool {
+        switch planFilter {
+        case .all:
+            return true
+        case .banned:
+            return account.isBanned
+        case .free, .pro, .max, .ultra:
+            guard let tier = planFilter.planTier else { return false }
+            return !account.isBanned && account.currentPlan == tier
+        }
+    }
+
+    private func matchesSearch(_ account: ClaudeAccount) -> Bool {
+        guard !searchText.isEmpty else { return true }
+        let query = searchText.lowercased()
+        let haystack = [account.email, account.region ?? ""]
+            .joined(separator: " ")
+            .lowercased()
+        return haystack.contains(query)
+    }
+
     private func openEditor(for ids: Set<PersistentIdentifier>) {
         if let first = ids.first {
             editing = accounts.first { $0.id == first }
@@ -206,6 +197,9 @@ struct AccountListView: View {
     private func deleteAccounts(_ ids: Set<PersistentIdentifier>) {
         for account in accounts where ids.contains(account.id) {
             modelContext.delete(account)
+        }
+        if let selectedAccount, ids.contains(selectedAccount.id) {
+            self.selectedAccount = nil
         }
         selected.subtract(ids)
     }
