@@ -12,6 +12,7 @@
 - **年度费用统计**：按订阅记录实际金额汇总，支持年份切换、月度柱状图、按账号明细，可排除已封禁账号
 - **便捷操作**：列表右键（编辑 / 添加订阅记录 / 封禁 / 删除）、密码一键复制、按邮箱后缀智能打开邮箱登录页（未知后缀可录入一次永久记住）
 - **JSON 导出**：账号数据导出（不含任何密码类字段）
+- **自动更新**：内置 Sparkle，可从应用菜单“检查更新…”获取新版本；发现更新会弹出提示，不会静默安装
 
 ## 系统要求
 
@@ -20,7 +21,7 @@
 
 ## 下载
 
-前往 [Releases](https://github.com/n7tequila/ClaudeAccountFee/releases) 页面下载 `ClaudeAccountFee-1.0.dmg`，打开后将应用拖入 Applications。
+前往 [Releases](https://github.com/n7tequila/ClaudeAccountFee/releases) 页面下载 `ClaudeAccountFee-1.1.dmg`，打开后将应用拖入 Applications。
 
 > **注意**：当前版本未经过 Apple 公证（需要开发者账号）。首次打开如被 Gatekeeper 拦截，请在"应用程序"中**右键 → 打开**，或到 系统设置 → 隐私与安全性 → 仍要打开。
 

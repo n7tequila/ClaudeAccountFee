@@ -5,14 +5,40 @@ import Pow
 
 struct StatsView: View {
     @Query private var accounts: [ClaudeAccount]
-    @State private var year: Int = Calendar.current.component(.year, from: Date())
+    @State private var selectedYear: Int?
     @AppStorage("statsExcludeBanned") private var excludeBanned = false
 
     private let calendar = Calendar.current
 
+    private var currentYear: Int {
+        calendar.component(.year, from: Date())
+    }
+
+    private var availableYears: [Int] {
+        let years = scopedAccounts.flatMap { account in
+            (account.subscriptions ?? []).map {
+                calendar.component(.year, from: $0.startDate)
+            }
+        }
+        return Array(Set(years)).sorted(by: >)
+    }
+
     private var yearRange: [Int] {
-        let current = calendar.component(.year, from: Date())
-        return Array((current - 10)...(current + 1)).reversed()
+        availableYears.isEmpty ? [currentYear] : availableYears
+    }
+
+    private var year: Int {
+        if let selectedYear, availableYears.contains(selectedYear) {
+            return selectedYear
+        }
+        return availableYears.first ?? currentYear
+    }
+
+    private var yearSelection: Binding<Int> {
+        Binding(
+            get: { year },
+            set: { selectedYear = $0 }
+        )
     }
 
     private var scopedAccounts: [ClaudeAccount] {
@@ -37,9 +63,9 @@ struct StatsView: View {
 
     private var header: some View {
         HStack {
-            Picker("年份", selection: $year) {
+            Picker("年份", selection: yearSelection) {
                 ForEach(yearRange, id: \.self) { value in
-                    Text("\(value) 年").tag(value)
+                    Text(verbatim: "\(value) 年").tag(value)
                 }
             }
             .pickerStyle(.menu)
@@ -118,7 +144,7 @@ struct StatsView: View {
                     }
                     .width(max: 80)
                     TableColumn("年度合计") { row in
-                        Text(formatMoney(row.yearTotal))
+                        Text(formatMoneyWithoutGrouping(row.yearTotal))
                             .fontWeight(.semibold)
                     }
                 }
@@ -131,7 +157,7 @@ struct StatsView: View {
         HStack(spacing: 16) {
             StatCardView(
                 title: "年度总费用",
-                value: formatMoney(report.total),
+                value: formatMoneyWithoutGrouping(report.total),
                 icon: "yensign.circle.fill",
                 accent: .red,
                 numericValue: report.total
