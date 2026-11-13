@@ -7,7 +7,7 @@ xcuserdata/
 *.xcuserdatad
 
 # XcodeGen 生成的工程文件（用 xcodegen 重新生成）
-ClaudeAccount.xcodeproj/
+ClaudeAccountFee.xcodeproj/
 
 # SPM
 .swiftpm/

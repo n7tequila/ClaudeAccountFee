@@ -25,7 +25,7 @@
 ```bash
 brew install xcodegen   # 如未安装
 xcodegen                # 根据 project.yml 生成 .xcodeproj
-open ClaudeAccount.xcodeproj
+open ClaudeAccountFee.xcodeproj
 ```
 
 在 Xcode 中选择 `ClaudeAccount` scheme 运行即可。依赖（KeyboardShortcuts、Pow）通过 Swift Package Manager 自动解析。

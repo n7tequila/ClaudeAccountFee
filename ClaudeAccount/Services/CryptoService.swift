@@ -91,7 +91,7 @@ final class CryptoService: ObservableObject, @unchecked Sendable {
         let context = LAContext()
         context.evaluatePolicy(
             .deviceOwnerAuthentication,
-            localizedReason: "解锁 ClaudeAccount 账号保险库"
+            localizedReason: "解锁 ClaudeAccountFee 账号保险库"
         ) { success, error in
             guard success else {
                 DispatchQueue.main.async {

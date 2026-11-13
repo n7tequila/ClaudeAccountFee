@@ -1,4 +1,4 @@
-name: ClaudeAccount
+name: ClaudeAccountFee
 options:
   createIntermediateGroups: true
 packages:
@@ -9,7 +9,7 @@ packages:
     url: https://github.com/movingparts-io/pow
     from: 1.0.0
 targets:
-  ClaudeAccount:
+  ClaudeAccountFee:
     type: application
     platform: macOS
     deploymentTarget: "14.0"
