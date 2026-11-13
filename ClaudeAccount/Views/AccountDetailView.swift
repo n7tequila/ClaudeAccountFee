@@ -138,7 +138,6 @@ struct AccountDetailView: View {
             .padding(28)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(Color(nsColor: .underPageBackgroundColor))
         .sheet(isPresented: $editing) {
             AccountEditView(account: account)
         }
@@ -239,6 +238,8 @@ struct AccountDetailView: View {
                 }
             }
             .font(valueFont)
+
+            Spacer()
 
             CopyButton(content: value)
 

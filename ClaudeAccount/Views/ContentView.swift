@@ -97,14 +97,14 @@ struct ContentView: View {
             if let account = selectedAccount {
                 AccountDetailView(account: account)
                     .id(account.id)
-                    .navigationSplitViewColumnWidth(min: 300, ideal: 380, max: 480)
+                    .navigationSplitViewColumnWidth(min: 320, ideal: 420)
             } else {
                 ContentUnavailableView(
                     "未选择账号",
                     systemImage: "person.crop.circle.badge.questionmark",
                     description: Text("在左侧列表中选择一个账号查看详情")
                 )
-                .navigationSplitViewColumnWidth(min: 300, ideal: 380, max: 480)
+                .navigationSplitViewColumnWidth(min: 320, ideal: 420)
             }
         case .stats:
             // 统计页占满宽度，隐藏详情栏
