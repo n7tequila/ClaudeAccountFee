@@ -19,3 +19,4 @@ ClaudeAccountFee.xcodeproj/
 *.log
 tmp/
 .omx/
+dist/
