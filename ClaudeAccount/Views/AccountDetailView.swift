@@ -39,6 +39,7 @@ struct AccountDetailView: View {
                         if let email = account.recoveryEmail {
                             Text(email)
                                 .textSelection(.enabled)
+                            Spacer()
                             emailLoginButton(email)
                         } else {
                             placeholder("未设置")
@@ -207,7 +208,7 @@ struct AccountDetailView: View {
         }
     }
 
-    /// 字段行：左侧固定宽度标签列，值紧随其后左对齐
+    /// 字段行：左侧固定宽度标签列，值紧随其后；操作图标统一靠右
     private func fieldRow<Content: View>(
         _ title: String,
         @ViewBuilder content: @escaping () -> Content
@@ -218,8 +219,8 @@ struct AccountDetailView: View {
                 .foregroundStyle(.secondary)
                 .frame(width: labelWidth, alignment: .leading)
             content()
-            Spacer(minLength: 0)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 10)
     }
 
