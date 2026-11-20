@@ -21,7 +21,7 @@
 
 ## 下载
 
-前往 [Releases](https://github.com/n7tequila/ClaudeAccountFee/releases) 页面下载 `ClaudeAccountFee-1.1.dmg`，打开后将应用拖入 Applications。
+前往 [Releases](https://github.com/n7tequila/ClaudeAccountFee/releases) 页面下载 `ClaudeAccountFee-1.2.dmg`，打开后将应用拖入 Applications。
 
 > **注意**：当前版本未经过 Apple 公证（需要开发者账号）。首次打开如被 Gatekeeper 拦截，请在"应用程序"中**右键 → 打开**，或到 系统设置 → 隐私与安全性 → 仍要打开。
 

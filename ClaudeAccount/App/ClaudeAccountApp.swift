@@ -8,13 +8,19 @@ import Sparkle
 struct ClaudeAccountApp: App {
     @StateObject private var updater = SparkleUpdater()
     @Environment(\.openWindow) private var openWindow
+    private let modelContainer: ModelContainer
+
+    init() {
+        DataStore.migrateLegacyStoreIfNeeded()
+        modelContainer = DataStore.makeContainer()
+    }
 
     var body: some Scene {
         WindowGroup {
             RootView()
                 .background(WindowLayoutRestorer())
         }
-        .modelContainer(for: [ClaudeAccount.self, SubscriptionRecord.self])
+        .modelContainer(modelContainer)
         .defaultSize(width: 1000, height: 700)
         .commands {
             CommandGroup(replacing: .appInfo) {
